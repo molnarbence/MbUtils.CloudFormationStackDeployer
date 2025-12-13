@@ -1,0 +1,19 @@
+stackPrefix: sample-app-
+variables:
+  bucketName: molnarbence-sample-storage
+
+tags:
+  Project: SampleProject
+
+stacks:
+  - name: iam-role
+    template: templates/iam-role.yml
+    parameters:
+      RoleName: sample-app-role
+      BucketName: ${variables.bucketName}
+  - name: bucket
+    template: templates/bucket.yml
+    parameters:
+      BucketName: molnarbence-sample-storage
+      RoleARN: ${outputs.iam-role.RoleARN}
+  

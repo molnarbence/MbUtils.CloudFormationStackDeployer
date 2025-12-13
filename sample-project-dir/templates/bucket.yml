@@ -1,0 +1,64 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Private S3 bucket with IAM role access policy'
+
+Parameters:
+  BucketName:
+    Type: String
+    Description: 'Name of the S3 bucket to be created'
+  RoleARN:
+    Type: String
+    Description: 'ARN of the IAM Role that will have access to the bucket'
+
+Outputs:
+  BucketArn:
+    Description: 'ARN of the created S3 bucket'
+    Value: !GetAtt SampleAppBucket.Arn
+    Export:
+      Name: !Sub '${AWS::StackName}-BucketArn'
+
+Resources:
+  SampleAppBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref BucketName
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+
+  SampleAppBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref SampleAppBucket
+      PolicyDocument:
+        Statement:
+          - Sid: AllowSampleAppRoleAccess
+            Effect: Allow
+            Principal:
+              AWS: !Ref RoleARN
+            Action:
+              - s3:GetObject
+              - s3:PutObject
+              - s3:DeleteObject
+              - s3:ListBucket
+            Resource:
+              - !GetAtt SampleAppBucket.Arn
+              - !Sub '${SampleAppBucket.Arn}/*'
+          - Sid: DenyInsecureTLS
+            Effect: Deny
+            Principal:
+              AWS: '*'
+            Action: 
+              - 's3:*'
+            Resource:
+              - !GetAtt SampleAppBucket.Arn
+              - !Sub '${SampleAppBucket.Arn}/*'
+            Condition:
+              NumericLessThan:
+                's3:TlsVersion': '1.3'
+

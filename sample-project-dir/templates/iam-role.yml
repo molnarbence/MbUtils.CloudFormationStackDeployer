@@ -1,0 +1,42 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'IAM Role to access S3 bucket'
+
+Parameters:
+  BucketName:
+    Type: String
+    Description: 'Name of the S3 bucket to which access is granted'
+  RoleName:
+    Type: String
+    Description: 'Name of the IAM role to be created'
+
+Outputs:
+  RoleARN:
+    Description: 'ARN of the created IAM Role'
+    Value: !GetAtt SampleAppRole.Arn
+
+Resources:
+  SampleAppRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Ref RoleName
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: SampleAppS3AccessPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                  - s3:DeleteObject
+                  - s3:ListBucket
+                Resource:
+                  - !Sub 'arn:aws:s3:::${BucketName}'
+                  - !Sub 'arn:aws:s3:::${BucketName}/*'
