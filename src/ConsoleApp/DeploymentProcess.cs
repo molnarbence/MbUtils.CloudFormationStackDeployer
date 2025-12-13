@@ -20,7 +20,9 @@ public class DeploymentProcess(IAmazonCloudFormation cloudFormation)
         var fullStackName = Helpers.GetFullStackName(projectConfiguration, selectedStack.Name);
         
         var parameters = await MapParametersAsync(projectConfiguration, selectedStack, cancellationToken).ToListAsync(cancellationToken: cancellationToken);
-        var tags = projectConfiguration.Tags.Select(tag => new Tag { Key = tag.Key, Value = tag.Value }).ToList();
+        var tags = projectConfiguration
+            .StackTags
+            .Select(tag => new Tag { Key = tag.Key, Value = ResolveTagValue(projectConfiguration.Variables, tag.Value) }).ToList();
         
         await AnsiConsole
             .Status()
@@ -33,11 +35,13 @@ public class DeploymentProcess(IAmazonCloudFormation cloudFormation)
                     async _ =>
                     {
                         ctx.Status("Updating stack...");
+                        AnsiConsole.MarkupLine($"[yellow]Stack '{fullStackName}' already exists. Initiating update...[/]");
                         return await InitiateUpdateAsync(templateFilePath, fullStackName, parameters, tags);
                     },
                     async _ =>
                     {
                         ctx.Status("Creating stack...");
+                        AnsiConsole.MarkupLine($"[green]Stack '{fullStackName}' does not exist. Initiating creation...[/]");
                         return await InitiateCreateAsync(templateFilePath, fullStackName, parameters, tags);
                     }, 
                     error => Task.FromResult<InitiateDeployResult>(new InitiateDeployResult.Error(error.WorkflowError)));
@@ -58,11 +62,11 @@ public class DeploymentProcess(IAmazonCloudFormation cloudFormation)
                     noActionNeeded =>
                     {
                         AnsiConsole.MarkupLine($"[yellow]No updates needed for stack: {fullStackName}[/]");
-                        return Task.FromResult<CloudFormation.DeployResult>(new CloudFormation.DeployResult.Success());
+                        return Task.FromResult<DeployResult>(new DeployResult.Success());
                     },
-                    error => Task.FromResult<CloudFormation.DeployResult>(new CloudFormation.DeployResult.Failure(error.WorkflowError)));
+                    error => Task.FromResult<DeployResult>(new DeployResult.Failure(error.WorkflowError)));
                 
-                var z = await deployResult.MatchAsync<CloudFormation.DeployResult>(
+                var z = await deployResult.MatchAsync<DeployResult>(
                     success =>
                     {
                         AnsiConsole.MarkupLine("[green]Stack deployment succeeded![/]");
@@ -87,7 +91,7 @@ public class DeploymentProcess(IAmazonCloudFormation cloudFormation)
     
     private async Task<string> ResolveParameterValueAsync(string value, ProjectConfiguration projectConfiguration, CancellationToken cancellationToken)
     {
-        var match = Patterns.MacroPattern().Match(value);
+        var match = Patterns.AllPlaceholdersPattern().Match(value);
         if (!match.Success) return value;
         
         var type = match.Groups[1].Value;
@@ -135,8 +139,6 @@ public class DeploymentProcess(IAmazonCloudFormation cloudFormation)
     
     private async Task<InitiateDeployResult> InitiateCreateAsync(string templateFilePath, string fullStackName, List<Parameter> parameters, List<Tag> tags)
     {
-        AnsiConsole.MarkupLine($"[green]Stack '{fullStackName}' does not exist. Initiating creation...[/]");
-
         var request = new CreateStackRequest
         {
             Capabilities = [Capability.CAPABILITY_IAM, Capability.CAPABILITY_NAMED_IAM],
@@ -152,15 +154,12 @@ public class DeploymentProcess(IAmazonCloudFormation cloudFormation)
         }
         
         var response = await cloudFormation.CreateStackAsync(request);
-        AnsiConsole.MarkupLine($"[green]Stack creation initiated. Stack ID: {response.StackId}[/]");
         
         return new InitiateDeployResult.CreateInitiated(response.StackId);
     }
     
     private async Task<InitiateDeployResult> InitiateUpdateAsync(string templateFilePath, string fullStackName, List<Parameter> parameters, List<Tag> tags)
     {
-        AnsiConsole.MarkupLine($"[yellow]Stack '{fullStackName}' already exists. Initiating update...[/]");
-
         var request = new UpdateStackRequest
         {
             Capabilities = [Capability.CAPABILITY_IAM, Capability.CAPABILITY_NAMED_IAM],
@@ -183,7 +182,7 @@ public class DeploymentProcess(IAmazonCloudFormation cloudFormation)
         catch (Exception e)
         {
             AnsiConsole.MarkupLine($"[red]Error initiating stack update: {e.Message}[/]");
-            return new InitiateDeployResult.Error(new CloudFormation.WorkflowErrors.AmazonError(e.Message));
+            return new InitiateDeployResult.Error(new WorkflowErrors.AmazonError(e.Message));
         }
     }
 
@@ -199,6 +198,16 @@ public class DeploymentProcess(IAmazonCloudFormation cloudFormation)
                 ParameterValue = resolvedValue
             };
         }
+    }
+
+    private static string ResolveTagValue(Dictionary<string, string> variables, string tagValue)
+    {
+        var match = Patterns.VariablesPattern().Match(tagValue);
+        if (!match.Success) return tagValue;
+        var variableName = match.Groups[1].Value;
+        return variables.TryGetValue(variableName, out var variableValue)
+            ? variableValue
+            : throw new Exception($"Variable '{variableName}' not found for tag mapping.");
     }
 }
 

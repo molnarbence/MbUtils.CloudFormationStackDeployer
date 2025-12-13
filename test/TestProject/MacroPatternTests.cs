@@ -11,7 +11,7 @@ public class MacroPatternTests
         const string parameter = "${variables.my-param}";
         
         // act
-        var match = Patterns.MacroPattern().Match(parameter);
+        var match = Patterns.AllPlaceholdersPattern().Match(parameter);
         
         // assert
         Assert.Equal("variables", match.Groups[1].Value);
@@ -25,7 +25,7 @@ public class MacroPatternTests
         const string parameter = "${outputs.iam-role.RoleARN}";
         
         // act
-        var match = Patterns.MacroPattern().Match(parameter);
+        var match = Patterns.AllPlaceholdersPattern().Match(parameter);
         
         // assert
         Assert.Equal("outputs", match.Groups[1].Value);

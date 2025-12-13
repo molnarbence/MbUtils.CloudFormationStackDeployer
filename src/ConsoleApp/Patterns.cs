@@ -7,5 +7,9 @@ public static partial class Patterns
 {
     // match ${variables.*} or ${outputs.*}
     [GeneratedRegex(@"^\$\{(variables|outputs)\.(.*)}$")]
-    public static partial Regex MacroPattern();
+    public static partial Regex AllPlaceholdersPattern();
+    
+    [GeneratedRegex(@"^\$\{variables\.(.*)}$")]
+    public static partial Regex VariablesPattern();
+    
 }

@@ -21,7 +21,7 @@ public class ConfigurationReaderTests
         // assert
         Assert.Equal("sample-app-", project.StackPrefix);
         Assert.Equal("molnarbence-sample-storage", project.Variables["bucketName"]);
-        Assert.Equal("SampleProject", project.Tags["Project"]);
+        Assert.Equal("${variables.project}", project.StackTags["Project"]);
 
         var firstStack = project.Stacks[0];
         Assert.Equal("iam-role", firstStack.Name);

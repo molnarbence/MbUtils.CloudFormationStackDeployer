@@ -1,9 +1,11 @@
 stackPrefix: sample-app-
 variables:
   bucketName: molnarbence-sample-storage
+  project: SampleProject
 
-tags:
-  Project: SampleProject
+stackTags:
+  Contact: myemail@example.com
+  Project: ${variables.project}
 
 stacks:
   - name: iam-role
@@ -11,9 +13,11 @@ stacks:
     parameters:
       RoleName: sample-app-role
       BucketName: ${variables.bucketName}
+      Project: ${variables.project}
   - name: bucket
     template: templates/bucket.yml
     parameters:
       BucketName: molnarbence-sample-storage
       RoleARN: ${outputs.iam-role.RoleARN}
+      Project: ${variables.project}
   
