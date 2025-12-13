@@ -32,5 +32,9 @@
     <PackageReference Include="MbUtils.Extensions.SpectreConsole" Version="10.0.0" />
     <PackageReference Include="YamlDotNet" Version="16.3.0" />
   </ItemGroup>
+  
+  <ItemGroup>
+    <None Include="../../README.md" Pack="true" PackagePath="/" />
+  </ItemGroup>
 
 </Project>
