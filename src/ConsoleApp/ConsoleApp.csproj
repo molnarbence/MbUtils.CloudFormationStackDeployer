@@ -28,6 +28,7 @@
 
   <ItemGroup>
     <PackageReference Include="AWSSDK.CloudFormation" Version="4.0.8.2" />
+    <PackageReference Include="AWSSDK.S3" Version="4.0.14.3" />
     <PackageReference Include="AWSSDK.SecurityToken" Version="4.0.5.4" />
     <PackageReference Include="Dunet" Version="1.11.3" />
     <PackageReference Include="MbUtils.Extensions.SpectreConsole" Version="10.0.0" />

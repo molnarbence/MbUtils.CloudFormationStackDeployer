@@ -23,7 +23,7 @@ public class DeploymentContext
         _cancellationToken = cancellationToken;
     }
 
-    public string FullStackName => BuildFullStackName(_selectedStackConfiguration.Name);
+    public string FullStackName => Helpers.GetFullStackName(_projectConfiguration, _selectedStackConfiguration.Name);
     
     public async IAsyncEnumerable<Parameter> MapParametersAsync()
     {
@@ -38,16 +38,12 @@ public class DeploymentContext
         }
     }
 
-    public List<Tag> GetTags()
-    {
-        return _projectConfiguration
+    public List<Tag> GetTags() =>
+        _projectConfiguration
             .StackTags
-            .Select(tag => new Tag { Key = tag.Key, Value = ResolveTagValue(tag.Value) }).ToList();
-    }
+            .Select(tag => new Tag { Key = tag.Key, Value = Helpers.ResolveVariable(_projectConfiguration, tag.Value) }).ToList();
 
     public string TemplateFilePath => _projectPath.GetTemplateFilePath(_selectedStackConfiguration.Template);
-    
-    private string BuildFullStackName(string stackName) => $"{_projectConfiguration.StackPrefix}{stackName}";
 
     private async Task<string> ResolveParameterValueAsync(string value)
     {
@@ -74,7 +70,7 @@ public class DeploymentContext
                 var stackName = parts[0];
                 var outputKey = parts[1];
                 
-                var fullStackName = BuildFullStackName(stackName);
+                var fullStackName = Helpers.GetFullStackName(_projectConfiguration, stackName);
 
                 var stackOutputs = await GetStackOutputsAsync();
 
@@ -96,16 +92,5 @@ public class DeploymentContext
             default:
                 throw new Exception($"Unknown macro type '{type}'.");
         }
-    }
-    
-    
-    private string ResolveTagValue(string tagValue)
-    {
-        var match = Patterns.VariablesPattern().Match(tagValue);
-        if (!match.Success) return tagValue;
-        var variableName = match.Groups[1].Value;
-        return _projectConfiguration.Variables.TryGetValue(variableName, out var variableValue)
-            ? variableValue
-            : throw new Exception($"Variable '{variableName}' not found for tag mapping.");
     }
 }

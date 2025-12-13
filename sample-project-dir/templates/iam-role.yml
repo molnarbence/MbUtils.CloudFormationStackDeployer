@@ -29,6 +29,10 @@ Resources:
             Principal:
               Service: ec2.amazonaws.com
             Action: sts:AssumeRole
+          - Effect: Allow
+            Principal:
+              AWS: !Sub 'arn:aws:iam::${AWS::AccountId}:user/cfdeploy-user'
+            Action: sts:AssumeRole
       Policies:
         - PolicyName: SampleAppS3AccessPolicy
           PolicyDocument:

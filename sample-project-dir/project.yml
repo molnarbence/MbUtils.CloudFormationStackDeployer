@@ -7,6 +7,9 @@ stackTags:
   Contact: myemail@example.com
   Project: ${variables.project}
 
+bucketsToPurge:
+  - ${variables.bucketName}
+
 stacks:
   - name: iam-role
     template: templates/iam-role.yml
