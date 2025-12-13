@@ -1,19 +1,18 @@
+using Amazon.SecurityToken;
 using ConsoleApp.Configuration;
+using ConsoleApp.SecurityToken;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
 namespace ConsoleApp.Commands;
 
-public class DeleteCommand(ConfigurationReader configurationReader, StackDeletionProcess stackDeletionProcess) : AsyncCommand<DeleteCommand.Settings>
+public class DeleteCommand(ConfigurationReader configurationReader, StackDeletionProcess stackDeletionProcess, IAmazonSecurityTokenService securityTokenService) : AsyncCommand<CommonCommandSettings>
 {
-    public class Settings : CommandSettings
+    public override async Task<int> ExecuteAsync(CommandContext context, CommonCommandSettings settings, CancellationToken cancellationToken)
     {
-        [CommandArgument(0, "<project-file>")]
-        public required string ProjectFile { get; set; }
-    }
-
-    public override async Task<int> ExecuteAsync(CommandContext context, Settings settings, CancellationToken cancellationToken)
-    {
+        var callerIdentity = await securityTokenService.GetCallerIdentityArnAsync(cancellationToken);
+        AnsiConsole.MarkupLine($"Caller Identity Arn: [blue]{callerIdentity}[/]");
+        
         var projectPath = new ProjectPath(settings.ProjectFile);
         var projectConfiguration = configurationReader.ReadProject(projectPath);
 

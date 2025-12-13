@@ -1,4 +1,5 @@
 ﻿using Amazon.CloudFormation;
+using Amazon.SecurityToken;
 using ConsoleApp;
 using ConsoleApp.Commands;
 using ConsoleApp.Configuration;
@@ -9,6 +10,7 @@ var consoleHost = new SpectreConsoleHost();
 
 consoleHost.Services
     .AddSingleton<IAmazonCloudFormation>(new AmazonCloudFormationClient())
+    .AddSingleton<IAmazonSecurityTokenService>(new AmazonSecurityTokenServiceClient())
     .AddSingleton<ConfigurationReader>()
     .AddSingleton<DeploymentProcess>()
     .AddSingleton<StackDeletionProcess>();

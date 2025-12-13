@@ -1,19 +1,19 @@
+using Amazon.SecurityToken;
 using ConsoleApp.Configuration;
+using ConsoleApp.SecurityToken;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
 namespace ConsoleApp.Commands;
 
-public class DeployCommand(ConfigurationReader configurationReader, DeploymentProcess deploymentProcess) : AsyncCommand<DeployCommand.Settings>
+public class DeployCommand(ConfigurationReader configurationReader, DeploymentProcess deploymentProcess, IAmazonSecurityTokenService securityTokenService) : AsyncCommand<CommonCommandSettings>
 {
-    public class Settings : CommandSettings
+    public override async Task<int> ExecuteAsync(CommandContext context, CommonCommandSettings settings, CancellationToken cancellationToken)
     {
-        [CommandArgument(0, "<project-file>")]
-        public required string ProjectFile { get; set; }
-    }
-
-    public override async Task<int> ExecuteAsync(CommandContext context, Settings settings, CancellationToken cancellationToken)
-    {
+        // print the current caller ID
+        var callerIdentity = await securityTokenService.GetCallerIdentityArnAsync(cancellationToken);
+        AnsiConsole.MarkupLine($"Caller Identity Arn: [blue]{callerIdentity}[/]");
+                    
         var projectPath = new ProjectPath(settings.ProjectFile);
         
         var projectConfiguration = configurationReader.ReadProject(projectPath);
@@ -27,8 +27,6 @@ public class DeployCommand(ConfigurationReader configurationReader, DeploymentPr
         var selectedStackName = AnsiConsole.Prompt(stackSelection);
         
         AnsiConsole.MarkupLine($"Selected: [green]{selectedStackName}[/]");
-        
-        var projectDirectory = Path.GetDirectoryName(Path.GetFullPath(settings.ProjectFile)) ?? ".";
         
         await deploymentProcess.DeployAsync(projectConfiguration, projectPath, selectedStackName, cancellationToken);
 

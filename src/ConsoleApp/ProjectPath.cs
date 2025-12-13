@@ -2,19 +2,21 @@ namespace ConsoleApp;
 
 public class ProjectPath
 {
-    private readonly string _filePath;
-
     public ProjectPath(string filePath)
     {
-        // check if file exists
-        if (!File.Exists(filePath))
+        // construct file path using current directory if relative path is provided
+        var absolutePath = Path.IsPathRooted(filePath)
+            ? filePath
+            : Path.Combine(Environment.CurrentDirectory, filePath);
+        
+        if (!File.Exists(absolutePath))
         {
-            throw new FileNotFoundException($"Project file not found: {filePath}");
+            throw new FileNotFoundException($"Project file not found: {absolutePath}");
         }
-        _filePath = filePath;
+        FullPath = absolutePath;
     }
 
-    public string FullPath => Path.GetFullPath(_filePath);
+    public string FullPath => Path.GetFullPath(field);
     public string Directory => Path.GetDirectoryName(FullPath) ?? ".";
 
     public string GetTemplateFilePath(string templatePath)
