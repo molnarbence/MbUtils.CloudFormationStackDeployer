@@ -20,7 +20,6 @@ consoleHost.Services
 
 consoleHost.Configure(configurator =>
 {
-    configurator.PropagateExceptions();
     configurator.AddCommand<DeployCommand>("deploy");
     configurator.AddCommand<DeleteCommand>("delete");
     configurator.AddCommand<PurgeBucketCommand>("purge-bucket");
