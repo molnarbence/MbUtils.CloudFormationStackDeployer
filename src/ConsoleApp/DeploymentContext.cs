@@ -23,7 +23,7 @@ public class DeploymentContext
         _cancellationToken = cancellationToken;
     }
 
-    public string FullStackName => $"{_projectConfiguration.StackPrefix}{_selectedStackConfiguration.Name}";
+    public string FullStackName => BuildFullStackName(_selectedStackConfiguration.Name);
     
     public async IAsyncEnumerable<Parameter> MapParametersAsync()
     {
@@ -46,6 +46,8 @@ public class DeploymentContext
     }
 
     public string TemplateFilePath => _projectPath.GetTemplateFilePath(_selectedStackConfiguration.Template);
+    
+    private string BuildFullStackName(string stackName) => $"{_projectConfiguration.StackPrefix}{stackName}";
 
     private async Task<string> ResolveParameterValueAsync(string value)
     {
@@ -71,12 +73,14 @@ public class DeploymentContext
                 }
                 var stackName = parts[0];
                 var outputKey = parts[1];
+                
+                var fullStackName = BuildFullStackName(stackName);
 
                 var stackOutputs = await GetStackOutputsAsync();
 
                 return stackOutputs.TryGetValue(outputKey, out var output)
                     ? output
-                    : throw new Exception($"Output '{outputKey}' of stack '${FullStackName}' not found.");
+                    : throw new Exception($"Output '{outputKey}' of stack '${fullStackName}' not found.");
 
                 async ValueTask<Dictionary<string, string>> GetStackOutputsAsync()
                 {
@@ -84,7 +88,7 @@ public class DeploymentContext
                     {
                         return outputs;
                     }
-                    var fromService = await _cloudFormation.GetStackOutputsAsync(FullStackName, _cancellationToken);
+                    var fromService = await _cloudFormation.GetStackOutputsAsync(fullStackName, _cancellationToken);
                     _stackOutputsCache[stackName] = fromService;
                     return fromService;
                 }

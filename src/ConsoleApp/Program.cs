@@ -5,6 +5,7 @@ using ConsoleApp.Commands;
 using ConsoleApp.Configuration;
 using MbUtils.Extensions.SpectreConsole;
 using Microsoft.Extensions.DependencyInjection;
+using Spectre.Console.Cli;
 
 var consoleHost = new SpectreConsoleHost();
 
