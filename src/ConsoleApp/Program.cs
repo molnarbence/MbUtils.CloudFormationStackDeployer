@@ -22,7 +22,7 @@ consoleHost.Configure(configurator =>
 {
     configurator.AddCommand<DeployCommand>("deploy");
     configurator.AddCommand<DeleteCommand>("delete");
-    configurator.AddCommand<PurgeBucketCommand>("purge-bucket");
+    configurator.AddCommand<EmptyBucketCommand>("empty-bucket");
 });
 
 return await consoleHost.RunAsync(args);

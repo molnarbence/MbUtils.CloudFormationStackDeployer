@@ -8,7 +8,7 @@ public static class S3ClientExtensions
 {
     extension(IAmazonS3 s3Client)
     {
-        public async IAsyncEnumerable<List<KeyVersion>> PurgeBucketAsync(string bucketName, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        public async IAsyncEnumerable<List<KeyVersion>> EmptyBucketAsync(string bucketName, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             string? continuationToken = null;
 

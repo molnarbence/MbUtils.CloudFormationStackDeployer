@@ -8,7 +8,7 @@ using Spectre.Console.Cli;
 
 namespace ConsoleApp.Commands;
 
-public class PurgeBucketCommand(IAmazonSecurityTokenService securityTokenService, ConfigurationReader configurationReader, IAmazonS3 s3Client) : AsyncCommand<CommonCommandSettings>
+public class EmptyBucketCommand(IAmazonSecurityTokenService securityTokenService, ConfigurationReader configurationReader, IAmazonS3 s3Client) : AsyncCommand<CommonCommandSettings>
 {
     public override async Task<int> ExecuteAsync(CommandContext context, CommonCommandSettings settings, CancellationToken cancellationToken)
     {
@@ -18,7 +18,7 @@ public class PurgeBucketCommand(IAmazonSecurityTokenService securityTokenService
         var projectPath = new ProjectPath(settings.ProjectFile);
         var projectConfiguration = configurationReader.ReadProject(projectPath);
         
-        var bucketNames = projectConfiguration.BucketsToPurge.Select(bucketName => Helpers.ResolveVariable(projectConfiguration, bucketName)).ToList();
+        var bucketNames = projectConfiguration.BucketsToEmpty.Select(bucketName => Helpers.ResolveVariable(projectConfiguration, bucketName)).ToList();
         
         var bucketNameSelection = new SelectionPrompt<string>()
             .Title("Select a bucket to purge:")
@@ -38,7 +38,7 @@ public class PurgeBucketCommand(IAmazonSecurityTokenService securityTokenService
             .StartAsync($"[green]Purging bucket... {selectedBucketName}[/]",
                 async ctx =>
                 {
-                    await foreach (var keyList in s3Client.PurgeBucketAsync(selectedBucketName, cancellationToken))
+                    await foreach (var keyList in s3Client.EmptyBucketAsync(selectedBucketName, cancellationToken))
                     {
                         totalObjectsPurged += keyList.Count;
                         ctx.Status($"Purged {totalObjectsPurged} objects from bucket {selectedBucketName}...");
