@@ -34,7 +34,7 @@ stacks:
   - name: bucket
     template: templates/bucket.yml
     parameters:
-      BucketName: molnarbence-sample-storage
+      BucketName: ${variables.bucketName}
       RoleARN: ${outputs.iam-role.RoleARN}
       Project: ${variables.project}
   
