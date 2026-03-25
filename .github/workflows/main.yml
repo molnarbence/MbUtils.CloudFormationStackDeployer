@@ -29,7 +29,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: >
           dotnet sonarscanner begin
-          /k:"MbUtils.CloudFormationStackDeployer"
+          /k:"molnarbence_MbUtils.CloudFormationStackDeployer"
           /o:"molnarbence-github"
           /d:sonar.token="$SONAR_TOKEN"
           /d:sonar.host.url="https://sonarcloud.io"
